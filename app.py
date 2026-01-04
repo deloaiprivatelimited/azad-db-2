@@ -78,6 +78,11 @@ class MicroUnitNote(Document):
     micro_unit = ReferenceField(MicroUnit, required=True, unique=True)
     content = StringField(required=True)
 
+    # legacy fields (keep for compatibility)
+    word_count = IntField()
+    image_required = BooleanField(default=False)
+    image_reasons = ListField(StringField())
+
     v1_generated = BooleanField(default=False)
     v1_verified = BooleanField(default=False)
 
@@ -85,6 +90,7 @@ class MicroUnitNote(Document):
         "collection": "micro_unit_notes",
         "indexes": ["micro_unit"]
     }
+
 
 
 class MCQOptionDoc(EmbeddedDocument):
