@@ -166,10 +166,12 @@ def subtopics_by_subject(subject):
     # print(noted_units)
 
     for mu in micro_units:
-        print(mu.id)
-        if mu.id in noted_units:
-            print(mu.subtopic.id)
+        # print(mu.id)
+        if mu in noted_units:
+            # print(mu.subtopic.id)
             subtopic_has_notes[mu.subtopic.id] = True
+    # print(subtopics[0].id)
+
 
     return jsonify([
         {
