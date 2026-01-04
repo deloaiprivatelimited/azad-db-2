@@ -4,6 +4,9 @@ from mongoengine import (
     StringField, BooleanField, IntField,
     ListField, ReferenceField, EmbeddedDocumentField
 )
+from flask_cors import CORS
+CORS(app)
+
 
 # -------------------------------------------------
 # DATABASE CONNECTION (MongoDB Atlas)
