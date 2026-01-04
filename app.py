@@ -5,6 +5,7 @@ from mongoengine import (
     ListField, ReferenceField, EmbeddedDocumentField
 )
 from flask_cors import CORS
+from bson import ObjectId
 
 
 # -------------------------------------------------
@@ -174,7 +175,8 @@ def micro_units_by_subtopic(subject, subtopic_name):
 
 @app.route("/notes/<micro_unit_id>")
 def notes_by_micro_unit(micro_unit_id):
-    note = MicroUnitNote.objects.get(micro_unit=micro_unit_id)
+    micro_unit = MicroUnit.objects.get(id=ObjectId(micro_unit_id))
+    note = MicroUnitNote.objects.get(micro_unit=micro_unit)
     return jsonify({
         "micro_unit_id": micro_unit_id,
         "content": note.content
