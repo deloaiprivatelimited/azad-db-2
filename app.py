@@ -152,33 +152,52 @@ def syllabus_by_subject(subject):
 
 @app.route("/subtopics/<subject>")
 def subtopics_by_subject(subject):
-    subtopics = SubTopic.objects(subject=subject)
-
-    micro_units = MicroUnit.objects(subtopic__in=subtopics)
-
-    noted_units = set(
-        MicroUnitNote.objects(
-            micro_unit__in=micro_units
-        ).distinct("micro_unit")
-    )
-
-    subtopic_has_notes = {}
-    # print(noted_units)
-
-    for mu in micro_units:
-        # print(mu.id)
-        if mu in noted_units:
-            # print(mu.subtopic.id)
-            subtopic_has_notes[mu.subtopic.id] = True
-    # print(subtopics[0].id)
-
-
+    # MongoDB aggregation pipeline for optimal performance
+    pipeline = [
+        {
+            "$match": {"subject": subject}
+        },
+        {
+            "$lookup": {
+                "from": "micro_units",
+                "let": {"subtopic_id": "$_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$subtopic", "$$subtopic_id"]}}},
+                    {
+                        "$lookup": {
+                            "from": "micro_unit_notes",
+                            "localField": "_id",
+                            "foreignField": "micro_unit",
+                            "as": "notes"
+                        }
+                    },
+                    {
+                        "$project": {
+                            "has_notes": {"$gt": [{"$size": "$notes"}, 0]}
+                        }
+                    }
+                ],
+                "as": "micro_units"
+            }
+        },
+        {
+            "$project": {
+                "name": 1,
+                "has_notes": {
+                    "$anyElementTrue": ["$micro_units.has_notes"]
+                }
+            }
+        }
+    ]
+    
+    result = SubTopic._get_collection().aggregate(pipeline)
+    
     return jsonify([
         {
-            "name": s.name,
-            "has_notes": subtopic_has_notes.get(s.id, False)
+            "name": doc["name"],
+            "has_notes": doc.get("has_notes", False)
         }
-        for s in subtopics
+        for doc in result
     ])
 
 
