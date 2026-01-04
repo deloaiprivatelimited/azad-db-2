@@ -5,7 +5,6 @@ from mongoengine import (
     ListField, ReferenceField, EmbeddedDocumentField
 )
 from flask_cors import CORS
-CORS(app)
 
 
 # -------------------------------------------------
@@ -209,6 +208,7 @@ def mcqs_by_micro_unit(micro_unit_id):
 # -------------------------------------------------
 # APP ENTRY
 # -------------------------------------------------
+CORS(app)
 
 if __name__ == "__main__":
     app.run(debug=True)
