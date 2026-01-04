@@ -153,8 +153,38 @@ def syllabus_by_subject(subject):
 
 @app.route("/subtopics/<subject>")
 def subtopics_by_subject(subject):
-    subtopics = SubTopic.objects(subject=subject, v4_finalized=True)
-    return jsonify([s.name for s in subtopics])
+    subtopics = SubTopic.objects(
+        subject=subject,
+        v4_finalized=True
+    )
+
+    # get all finalized micro-units under these subtopics
+    micro_units = MicroUnit.objects(
+        subtopic__in=subtopics,
+        v6_finalized=True
+    )
+
+    # find micro-units that have notes
+    noted_units = set(
+        MicroUnitNote.objects(
+            micro_unit__in=micro_units
+        ).distinct("micro_unit")
+    )
+
+    # map subtopic_id → has_notes
+    subtopic_has_notes = {}
+    for mu in micro_units:
+        if mu.id in noted_units:
+            subtopic_has_notes[mu.subtopic.id] = True
+
+    return jsonify([
+        {
+            "name": s.name,
+            "has_notes": subtopic_has_notes.get(s.id, False)
+        }
+        for s in subtopics
+    ])
+
 
 
 @app.route("/micro-units/<subject>/<subtopic_name>")
@@ -170,12 +200,21 @@ def micro_units_by_subtopic(subject, subtopic_name):
         v6_finalized=True
     ).order_by("order")
 
+    # fetch all micro_unit ids that already have notes
+    notes_map = set(
+        MicroUnitNote.objects(
+            micro_unit__in=units
+        ).distinct("micro_unit")
+    )
+
     return jsonify([
         {
             "id": str(u.id),
             "name": u.name,
-            "order": u.order
-        } for u in units
+            "order": u.order,
+            "has_notes": u.id in notes_map
+        }
+        for u in units
     ])
 
 
